@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User , Projects
+from .models import User , Projects, Ideas
 from djoser.serializers import UserCreateSerializer
 from django.contrib.auth import get_user_model
  
@@ -42,10 +42,15 @@ class ProjectsSerializer(serializers.ModelSerializer):
    
     class Meta:
        model = Projects 
-       fields = ('title', 'description', 'year', 'category','used_techs','created_by','supervised_by','logo','image','created_at')
+       fields = ('title', 'description', 'year', 'category','used_techs','created','created_by','supervised_by','logo','image','image2','image3','created_at')
 
         
-        
+class IdeasSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Ideas
+        fields = '__all__'
+
         
         
 

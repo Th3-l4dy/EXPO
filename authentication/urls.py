@@ -39,9 +39,8 @@ urlpatterns += [
     path("accounts/", include("accounts.urls")),
     path("auth/", include("djoser.urls")),
     path("auth/", include("djoser.urls.authtoken")),
-    path("login/", TokenCreateView.as_view(), name="token_create"),
+    path("login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("logout/", TokenDestroyView.as_view(), name="token_destroy"),
-    path("jwt/create/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("jwt/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

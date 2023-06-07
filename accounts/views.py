@@ -1,6 +1,6 @@
 from django.shortcuts import redirect, render
 from django.http import JsonResponse
-from .models import Students, User
+from .models import Students, User,Ideas
 import json
 ## fatima code using rest framework to reate Projects api for  crud methode 
 from rest_framework.decorators import api_view
@@ -56,15 +56,17 @@ def get_students(request):
             data_list.append(data_dict)
         return JsonResponse(data_list, safe=False)
 
-def get_projects_by_user(request, user_id):
-    projects = Projects.objects.filter(created_by=user_id)
+def get_projects_by_user(request, email):
+    user = User.objects.get(email=email)
+    projects = user.projects_created.all()
+    #projects = Projects.objects.filter(created=user_id)
     serializer = ProjectsSerializer(projects,many=True)
     
     return JsonResponse(serializer.data,safe=False)
 
-def get_user_profile(request, user_id):
+def get_user_profile(request, email):
     try:
-        user = User.objects.get(id=user_id)
+        user = User.objects.get(email=email)
         skillsarray = user.skills.split(",")
         user_data = {
             'username': user.username,
@@ -77,6 +79,20 @@ def get_user_profile(request, user_id):
         return JsonResponse(user_data)
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404)
+    
+    
+@api_view(['POST'])
+def update_profile(request, email):
+    user = User.objects.get(email=email)
+    if request.method == 'POST':
+        user.first_name = request.data.get('first_name')
+        user.last_name = request.data.get('last_name')
+        user.skills = request.data.get('skills')
+        user.username = request.data.get('username')
+        user.save()
+        return JsonResponse({'message': 'Profile updated successfully'})
+    else:
+        return JsonResponse({'message': 'Invalid request method'}, status=400)
 
 #############################################################################################  
 # fatima code : rest framework for projecs models 
@@ -110,16 +126,29 @@ def ApiOverview(request):
 #     else:
 #         return Response(status=status.HTTP_400_BAD_REQUEST)
 ##############################################################
-
+@api_view(['POST'])
 def upload_image(request, project_id):
     project = Projects.objects.get(id=project_id)
+    image = request.FILES.get('image')
+    project = project(image=image)
+    project.save()
+    return Response({'message': 'Image uploaded successfully'})
 
-    if request.method == 'POST':
-        image = request.FILES.get('image')
-        project.image = image
-        project.save()
+from .serializers import ProjectsSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
 
-    return redirect('ProjectList/create/', project_id=project_id) 
+class ProjectUploadView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, *args, **kwargs):
+        serializer = ProjectsSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 
 
@@ -137,16 +166,7 @@ class AddProject(mixins.ListModelMixin,
         #     raise serializers.ValidationError('This data already exists')
       
         if serializer.is_valid():
-            created_by_data = request.data.get('created_by', [])
-            supervised_by_data = request.data.get('supervised_by', [])
-            project = serializer.save(
-    
-               
-            )
-
-            # Add the created_by and supervised_by relationships
-            project.created_by.set(created_by_data)
-            project.supervised_by.set(supervised_by_data)
+            project = serializer.save()
 
             return Response(serializer.data)
         else:
@@ -161,16 +181,8 @@ class AddProject(mixins.ListModelMixin,
             #     raise serializers.ValidationError('This data already exists')
         
             if serializer.is_valid():
-                created_by_data = request.data.get('created_by', [])
-                supervised_by_data = request.data.get('supervised_by', [])
-                project = serializer.save(
-        
-                
-                )
+                project = serializer.save()
 
-                # Add the created_by and supervised_by relationships
-                project.created_by.set(created_by_data)
-                project.supervised_by.set(supervised_by_data)
 
                 return Response(serializer.data)
             else:
@@ -252,7 +264,6 @@ class ProjectsViewSet(APIView):
         category = request.GET.get('category')
         year = request.GET.get('year')
         used_techs = request.GET.get('used_techs')
-
         query = Q()
         if category:
             query &= Q(category=category)
@@ -271,3 +282,35 @@ class ProjectsViewSet(APIView):
 
         serializer = ProjectsSerializer(results, many=True)
         return JsonResponse(serializer.data, safe=False)
+
+def get_user_first_name(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        first_name = user.first_name
+        return JsonResponse({'first_name': first_name})
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404)
+    
+@api_view(['POST'])
+def create_idea(request):
+    title = request.data.get('title')
+    description = request.data.get('description')
+    ideas = Ideas(title=title, description=description)
+    ideas.save()
+
+    return JsonResponse({'success': True})
+
+
+def get_all_ideas(request):
+    ideas = Ideas.objects.all()
+    data = []
+    for idea in ideas:
+        created_at_date = idea.created_at.strftime('%Y-%m-%d')
+        idea_data = {
+            'title': idea.title,
+            'created_at' : created_at_date,
+            'description': idea.description,
+        }
+        data.append(idea_data)
+
+    return JsonResponse(data, safe=False)

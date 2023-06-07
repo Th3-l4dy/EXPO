@@ -59,7 +59,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3001',
+    'http://localhost:3000',
 ]
 
 ROOT_URLCONF = "authentication.urls"
@@ -91,9 +91,9 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "railway",
         "USER": "postgres",
-        "PASSWORD": "DUqS52C1fPNb7nn8DFU1",
-        "HOST": "containers-us-west-102.railway.app",
-        "PORT": "6975",
+        "PASSWORD": "FIKjQRReBcjrNROdIvIi",
+        "HOST": "containers-us-west-114.railway.app",
+        "PORT": "6621",
     }
 }
 

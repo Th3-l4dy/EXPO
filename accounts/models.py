@@ -1,3 +1,4 @@
+from datetime import timezone
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -124,10 +125,10 @@ class Supervisors(models.Model):
 
 class Projects(models.Model):
     class Year(models.TextChoices): 
-        YEAR_2 = '2', '2CPI'
-        YEAR_3 = '3', '1CS'
-        YEAR_4 = '4', '2CS'
-        YEAR_5 = '5', '3CS'
+        YEAR_2 = '2CPI', '2CPI'
+        YEAR_3 = '1CS', '1CS'
+        YEAR_4 = '2CS', '2CS'
+        YEAR_5 = '3CS', '3CS'
     class Category(models.TextChoices):
         ARDUINO = 'Arduino', 'Arduino'
         DESKTOP = 'Desktop App', 'Desktop App'
@@ -138,15 +139,27 @@ class Projects(models.Model):
      
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    year = models.CharField(max_length=1, choices=Year.choices, default=None)
+    year = models.CharField(max_length=4, choices=Year.choices, default=None)
     category = models.CharField(max_length=20, choices=Category.choices, default=None)
-    created_by = models.ManyToManyField(User, related_name='projects_created', limit_choices_to={'role': 'STUDENT'}, blank=True)
-    supervised_by = models.ManyToManyField(User, related_name='projects_supervised', limit_choices_to={'role': 'SUPERVISOR'}, blank=True)
+    created = models.ManyToManyField(User, related_name='projects_created', limit_choices_to={'role': 'STUDENT'}, blank=True)
+    created_by = models.TextField(blank=True)
+    supervised_by = models.TextField(blank=True)
     used_techs = models.TextField(blank=True)
     logo = models.ImageField(upload_to='project_logos/', blank=True)
     image = models.ImageField(upload_to='project_images/', blank=True, null=True)
+    image2 = models.ImageField(upload_to='project_images/', blank=True, null=True)
+    image3 = models.ImageField(upload_to='project_images/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
     
     
     def __str__(self):
+        return self.title
+
+class Ideas(models.Model):
+    title = models.CharField(max_length=100,null=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    description = models.TextField()
+
+    def str(self):
         return self.title
